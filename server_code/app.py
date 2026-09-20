@@ -90,4 +90,5 @@ def register_callable(name, fn, *, require_user=None):
     if require_user is None:
         anvil.server.callable(name)(invoke)
     else:
-        anvil.server.callable(name=name, require_user=require_user)(invoke)
+        # Runtime accepts positional fn_or_name; the stub omits this overload.
+        anvil.server.callable(name, require_user=require_user)(invoke)  # pyright: ignore[reportCallIssue]
