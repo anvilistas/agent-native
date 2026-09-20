@@ -11,10 +11,13 @@ EMPTY = {'type': 'object', 'properties': {}, 'additionalProperties': False}
 
 
 class Server:
-    def __init__(self, name, authenticate, *, instructions='', wrapper='', origin=None):
+    def __init__(self, name, authenticate, *, instructions='', wrapper=None, origin=None):
         self.name = name
         self.authenticate = authenticate
         self.instructions = instructions
+        if wrapper is None:
+            from ._assets import WRAPPER
+            wrapper = WRAPPER
         self.wrapper = wrapper
         self.origin = origin
         self.tools = {}

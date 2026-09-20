@@ -1,88 +1,76 @@
-# About This [Anvil](https://anvil.works/?utm_source=github:app_README) App
+# Agent-native Anvil dependency
 
-### Build web apps with nothing but Python.
+Prototype for exposing an Anvil app's Python operations and Forms to an existing agent conversation. The consuming app hosts its own MCP HTTP endpoint. No model runs in this dependency.
 
-The app in this repository is built with [Anvil](https://anvil.works?utm_source=github:app_README), the framework for building web apps with nothing but Python. You can clone this app into your own Anvil account to use and modify.
+## Consumer setup
 
-Below, you will find:
-- [How to open this app](#opening-this-app-in-anvil-and-getting-it-online) in Anvil and deploy it online
-- Information [about Anvil](#about-anvil)
-- And links to some handy [documentation and tutorials](#tutorials-and-documentation)
+Add dependency app `3FTTGXCYZDGP2LT5`. Its package is `agent_native`. The supplied review example also uses routing `3PIDO5P3H4VPEMPL`; routing is optional for the transport itself.
 
-## Opening this app in Anvil and getting it online
+Create a server module with explicit tools and an endpoint:
 
-### Cloning the app
+```python
+import anvil.server
+from agent_native.mcp import Server
 
-Go to the [Anvil Editor](https://anvil.works/build?utm_source=github:app_README) (you might need to sign up for a free account) and click on “Clone from GitHub” (underneath the “Blank App” option):
+# authenticate(header) must return None or a trusted principal containing scopes.
+server = Server('My app', authenticate)
 
-<img src="https://anvil.works/docs/version-control/img/git/clone-from-github.png" alt="Clone from GitHub"/>
+@server.tool(scope='records:read', read_only=True)
+def read_records(principal):
+    """Read the records this connected user can access."""
+    return {'records': records_for(principal['subject'])}
 
-Enter the URL of this GitHub repository. If you're not yet logged in, choose "GitHub credentials" as the authentication method and click "Connect to GitHub".
+@anvil.server.http_endpoint('/mcp', methods=['POST', 'GET', 'DELETE'])
+def endpoint():
+    return server.handle()
+```
 
-<img src="https://anvil.works/docs/version-control/img/git/clone-app-from-git.png" alt="Clone App from Git modal"/>
+`authenticate` and `records_for` above are consumer-defined functions. Every tool receives the authenticated principal as its first argument. Use `schema=` to supply its JSON Schema inputs; the default accepts no arguments. Additional properties should be forbidden. Tool discovery and every invocation check the declared scope. Record-level authorization remains in the app function.
 
-Finally, click "Clone App".
+Tools marked `view=True` advertise the standard iframe resource. Return `ToolResult(data, meta=...)` with `anvil/runtimeUrl`, `anvil/embedTicket`, and optionally `anvil/renewTool`. The launch URL must be a trusted app route. UI credentials belong in metadata, never in the model-visible data.
 
-This app will then be in your Anvil account, ready for you to run it or start editing it! **Any changes you make will be automatically pushed back to this repository, if you have permission!** You might want to [make a new branch](https://anvil.works/docs/version-control?utm_source=github:app_README).
+The current adapter needs `jsonschema==4.25.1` available in the consuming app's Python environment. A matching requirements file is included here.
 
-### Running the app yourself:
+## Embedded Forms
 
-Find the **Run** button at the top-right of the Anvil editor:
+Use `agent_native.EmbeddedLayout` for a compact content-only layout. Its slot is `content`. Ordinary Forms also work.
 
-<img src="https://anvil.works/docs/img/run-button-new-ide.png"/>
+`agent_native.host` exposes:
 
+- `claim(claim_function)`: claim the launch ticket; attempt host-mediated renewal when the session is missing or expired.
+- `send_message(text)`: submit feedback into the owning conversation.
+- `set_context(value)`: provide JSON UI context when the host supports it.
+- `on_refresh(callback)`: reload saved state when another tool result arrives.
+- `capabilities()`: check whether conversation messaging is available.
+- `connect()`: access the underlying JS bridge for local UI buffers and advanced integration.
 
-### Publishing the app on your own URL
+The consumer currently supplies two small bootstrap functions, demonstrated in Dev Updates' `NativeReview` server module: `agent_native_client_url` returns the bridge's absolute API URL, and an HTTP endpoint serves `agent_native._assets.BRIDGE` with `Content-Type: text/javascript`. This avoids relying on dependency theme-asset URL conventions. The consumer also supplies a callable that invokes `Access.claim(ticket, view)`.
 
-Now you've cloned the app, you can [deploy it on the internet with two clicks](https://anvil.works/docs/deployment/quickstart?utm_source=github:app_README)! Find the **Publish** button at the top-right of the editor:
+The wrapper embeds the actual app route. It validates the iframe's browser origin and window before relaying messages. The app pins its parent origin after the initial channel handshake. CSP allows only the consuming app's frame origin.
 
-<img src="https://anvil.works/docs/deployment/img/environments/publish-button.png"/>
+## Prototype authentication
 
-When you click it, you will see the Publish dialog:
+`agent_native.access.Access(table, enabled)` uses a consumer-owned Data Table with a string `key` column and simpleObject `snapshot` column, with client access disabled. It does not share records between consuming apps.
 
-<img src="https://anvil.works/docs/deployment/img/quickstart/empty-environments-dialog.png"/>
+Provision credentials in trusted server/admin code only. Generate 32 random bytes as a URL-safe token, store only its SHA-256 digest in `key` as `agent-native/credential/<digest>`, and store `{subject, scopes, enabled}` in `snapshot`. Give the raw token only to the connecting user's credential store. Disable or remove the record to revoke access. The `enabled(subject)` callback checks the app's user policy on every request and embedded read.
 
-Click **Publish This App**, and you will see that your app has been deployed at a new, public URL:
+This is scoped bearer authentication for the prototype, not a complete OAuth login product. Never put Server Uplink keys or owner passwords in MCP configuration or browser code.
 
-<img src="https://anvil.works/docs/deployment/img/quickstart/default-public-environment.png"/>
+`Access.ticket(principal, view)` creates a one-use ticket valid for 90 seconds. Claiming it grants a 15-minute Anvil session for that view. Existing valid sessions survive reload; otherwise the wrapper can call an app-visible renewal tool through the authenticated MCP host. A failed renewal asks the user to reopen the view. Agent access does not grant human approval permissions.
 
-That's it - **your app is now online**. Click the link and try it!
+## Transport and limits
 
-## About Anvil
+Implements stateless JSON request/response MCP for protocol versions 2025-03-26, 2025-06-18 and 2025-11-25. Supports initialization, ping, tool listing/calls and static UI resource listing/reading. GET streaming returns 405; accepted notifications return 202 and never invoke tools. No streaming, OAuth discovery, task orchestration, subscriptions or server-initiated sampling.
 
-If you’re new to Anvil, welcome! Anvil is a platform for building full-stack web apps with nothing but Python. No need to wrestle with JS, HTML, CSS, Python, SQL and all their frameworks – just build it all in Python.
+Bounded reads and writes suit this adapter. Research, GitHub access and model generation stay in the agent. Use normal Anvil server events for an already-open Form's invalidation independently of MCP streaming.
 
-<figure>
-<figcaption><h3>Learn About Anvil In 80 Seconds👇</h3></figcaption>
-<a href="https://www.youtube.com/watch?v=3V-3g1mQ5GY" target="_blank">
-<img
-  src="https://anvil-website-static.s3.eu-west-2.amazonaws.com/anvil-in-80-seconds-YouTube.png"
-  alt="Anvil In 80 Seconds"
-/>
-</a>
-</figure>
-<br><br>
+Rebuilding the wrapper:
 
-[![Try Anvil Free](https://anvil-website-static.s3.eu-west-2.amazonaws.com/mark-complete.png)](https://anvil.works?utm_source=github:app_README)
+```sh
+pnpm --dir bridge install --ignore-workspace
+pnpm --dir bridge build
+```
 
-To learn more about Anvil, visit [https://anvil.works](https://anvil.works?utm_source=github:app_README).
+The generated `server_code/_assets.py` is committed so consumers need no Node build. It bundles the official MCP Apps SDK.
 
-## Tutorials and documentation
-
-### Tutorials
-
-If you are just starting out with Anvil, why not **[try the 10-minute Feedback Form tutorial](https://anvil.works/learn/tutorials/feedback-form?utm_source=github:app_README)**? It features step-by-step tutorials that will introduce you to the most important parts of Anvil.
-
-Anvil has tutorials on:
-- [Building Dashboards](https://anvil.works/learn/tutorials/data-science#dashboarding?utm_source=github:app_README)
-- [Multi-User Applications](https://anvil.works/learn/tutorials/multi-user-apps?utm_source=github:app_README)
-- [Building Web Apps with an External Database](https://anvil.works/learn/tutorials/external-database?utm_source=github:app_README)
-- [Deploying Machine Learning Models](https://anvil.works/learn/tutorials/deploy-machine-learning-model?utm_source=github:app_README)
-- [Taking Payments with Stripe](https://anvil.works/learn/tutorials/stripe?utm_source=github:app_README)
-- And [much more....](https://anvil.works/learn/tutorials?utm_source=github:app_README)
-
-### Reference Documentation
-
-The Anvil reference documentation provides comprehensive information on how to use Anvil to build web applications. You can find the documentation [here](https://anvil.works/docs/overview?utm_source=github:app_README).
-
-If you want to get to the basics as quickly as possible, each section of this documentation features a [Quick-Start Guide](https://anvil.works/docs/overview/quickstarts?utm_source=github:app_README).
+Run `python tests/test_mcp.py` in an environment containing jsonschema, then `anvil --json validate .`. Dev Updates is the integration example, not part of the dependency's business logic.
