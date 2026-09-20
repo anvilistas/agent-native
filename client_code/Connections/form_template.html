@@ -2,20 +2,20 @@
   <h1>Agent connections</h1>
   <anvil-component type="Button" name="sign_in" prop:text="Sign in"></anvil-component>
   <anvil-component type="Label" name="message"></anvil-component>
-  <anvil-component type="ColumnPanel" name="manager" prop:visible="False">
+  <anvil-component type="ColumnPanel" name="manager" prop:visible="false">
     <anvil-component type="TextBox" name="connection_name" prop:placeholder="Connection name, e.g. Codex on my Mac"></anvil-component>
     <anvil-component type="RepeatingPanel" name="permissions" prop:item_template="agent_native.PermissionRow"></anvil-component>
     <anvil-component type="Button" name="create" prop:text="Create connection"></anvil-component>
-    <anvil-component type="ColumnPanel" name="new_connection" prop:visible="False">
+    <anvil-component type="ColumnPanel" name="new_connection" prop:visible="false">
       <anvil-component type="Label" name="copy_note" prop:text="Copy this token before closing. It won’t be shown again."></anvil-component>
-      <anvil-component type="TextBox" name="token" prop:hide_text="True" prop:enabled="False"></anvil-component>
+      <anvil-component type="TextBox" name="token" prop:hide_text="true" prop:enabled="false"></anvil-component>
       <anvil-component type="Button" name="copy_token" prop:text="Copy token"></anvil-component>
       <anvil-component type="Button" name="copy_config" prop:text="Copy Codex configuration"></anvil-component>
       <anvil-component type="Label" name="config_help" prop:text="Paste the configuration into ~/.codex/config.toml, then start a new task."></anvil-component>
       <anvil-component type="Button" name="done" prop:text="Done"></anvil-component>
     </anvil-component>
     <anvil-component type="Label" name="endpoint_label" prop:text="MCP endpoint"></anvil-component>
-    <anvil-component type="TextBox" name="endpoint" prop:enabled="False"></anvil-component>
+    <anvil-component type="TextBox" name="endpoint" prop:enabled="false"></anvil-component>
     <anvil-component type="RepeatingPanel" name="connections" prop:item_template="agent_native.ConnectionRow"></anvil-component>
   </anvil-component>
 </main>
