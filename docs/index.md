@@ -17,4 +17,4 @@ The Dev Updates and Email Review apps exercise the same dependency with differen
 
 The API is a prototype. Codex has been exercised with both consumer apps. Other MCP Apps hosts require compatibility checks, particularly authentication, nested iframes and conversation messaging. Ordinary MCP clients can use tools without rendering Forms.
 
-Adding the dependency requires access to its Anvil app. This repository does not establish public sharing, a stable released dependency version or hosted documentation. The current examples use development dependency versions; choose and test a released version before distributing a production consumer.
+Adding the dependency requires access to its Anvil app. Documentation is hosted on GitHub Pages. A public source repository does not itself grant access to the Anvil dependency app or establish a stable released dependency version. The current examples use development dependency versions; choose and test a released version before distributing a production consumer.

@@ -2,7 +2,7 @@
 
 Expose an Anvil app's Python operations and Forms to an existing agent conversation. The consuming app hosts its own MCP HTTP endpoint. No model runs in this dependency.
 
-Documentation: [quick start](docs/quick-start.md), [authentication](docs/authentication.md), [API reference](docs/api-reference.md). Coding agents can start with the root [llms.txt](llms.txt). Build the MkDocs site with `python -m mkdocs build --strict`; hosting has not been configured.
+Documentation: [quick start](docs/quick-start.md), [authentication](docs/authentication.md), [API reference](docs/api-reference.md). Coding agents can start with the root [llms.txt](llms.txt). Build the MkDocs site with `python -m mkdocs build --strict`; GitHub Pages deploys the docs from `master` to https://anvilistas.github.io/agent-native/.
 
 ## Consumer setup
 

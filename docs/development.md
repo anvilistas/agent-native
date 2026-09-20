@@ -31,4 +31,4 @@ python -m mkdocs build --strict
 
 The root `llms.txt` is the canonical compact guide for coding agents. A build hook copies it to the site root. Edit it when the public API or required setup changes. Do not include runtime debug URLs, bearer tokens or account-specific credentials in docs.
 
-The Read the Docs configuration is provided, but no hosted docs project has been provisioned.
+GitHub Pages publishes these docs at https://anvilistas.github.io/agent-native/. Pushes to `master` affecting documentation or its build files trigger deployment. The Read the Docs configuration remains available for an alternative host.

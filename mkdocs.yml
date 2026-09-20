@@ -1,4 +1,8 @@
 site_name: Agent-native Anvil
+site_url: https://anvilistas.github.io/agent-native/
+repo_url: https://github.com/anvilistas/agent-native
+repo_name: anvilistas/agent-native
+edit_uri: edit/master/docs/
 site_description: Expose Anvil tools and Forms to agent conversations
 
 theme:
