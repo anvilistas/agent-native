@@ -1,0 +1,37 @@
+# Agent-native Anvil dependency
+
+Prototype Anvil dependency, package `agent_native`, app ID `3FTTGXCYZDGP2LT5`. Exposes explicit Python tools over MCP and Anvil Forms through MCP Apps. The agent runs in its existing host conversation. No model runner or local Uplink is required for this integration.
+
+## Setup and preferred API
+
+Add this dependency and routing `3PIDO5P3H4VPEMPL`. The developer needs access to both apps. Enable embedding, add Users, install `jsonschema==4.25.1`, and create a consumer-owned server-only table with `key` string and `snapshot` simpleObject columns. Apply the schema before running.
+
+In a server module create `Access(table, enabled)` from `agent_native.access`, then one `App(name, access, owner=predicate, permissions={scope: label})` from `agent_native.app`. `enabled(subject)` rechecks the account policy. `owner(user)` controls the signed-in connection manager. Declare scopes in permissions.
+
+- `@app.tool(scope=..., read_only=True, schema=...)` exposes a function. Its first argument is the trusted principal; other arguments come from JSON input. Default schema takes no arguments. Reject additional properties. Filter records by principal['subject']; scope alone is insufficient.
+- `@app.view('review', path='/review', scope='records:read')` exposes a no-input view tool whose function takes the principal and returns app data. It supplies launch metadata and the app-only `reopen_review` tool.
+- Route `/review` to the consumer Form, `/connections` to `agent_native.Connections`, and start routing with `routing.router.launch()`.
+- In the Form, `from agent_native import host`; check `host.claim('review')['ok']` before reading data. Every embedded server callable must use `access.require_view('review')`, then enforce write scopes and record ownership. The grant is not an Anvil Users login.
+- `host.send_message(text)` sends feedback into the conversation. Save edits first. Handle failed messaging separately from a successful save. `host.set_context(value)`, `host.on_refresh(callback)`, `host.capabilities()` and `host.connect()` provide host integration.
+- `agent_native.EmbeddedLayout` provides a `content` slot. Route Form constructors accept `routing_context=None` without forwarding it to template initialization.
+
+App registers the MCP endpoint, bridge endpoint and generic claim/connection callables. Do not recreate these in the consumer. App-specific data, revision checks, unsent edit buffers and human approval rules stay in consumer code.
+
+## Authentication
+
+The human signs in with the consumer's Users service to issue a named, scoped connection. The host stores the raw bearer token; the app stores only its hash. Tokens currently have no automatic expiry. Revocation or disabling the subject rejects subsequent MCP and embedded calls. Signing out of the browser does not revoke tokens.
+
+Opening a view issues a one-use ticket valid for 90 seconds, exchanged for a 15-minute session grant. The host can renew access using its token. The agent does not get the human password. Ticket metadata must not appear in model-visible tool data. Never include credentials or private debug URLs in documentation.
+
+## Limits and checks
+
+Prototype API. One App per consumer. Stateless JSON HTTP MCP; no streaming, OAuth, background agent runner or automatic ticket-row cleanup. A host needs MCP Apps for inline UI, plus messaging and server-tool support for the full review/renewal flow. Only Codex has been exercised with both current examples.
+
+Run `anvil deps fetch` in a checked-out consumer after pushing dependency declarations, then `anvil --json validate .`. Validation is not runtime verification. Test the hosted operations and UI. HTML property literals use JSON booleans (`false`, `true`), not Python strings. Anvil's runtime accepts `callable(fn_or_name, require_user=...)`; its current stub misses that overload. Do not replace it with unsupported `name=` merely to satisfy validation.
+
+## Documentation
+
+- [Quick start](docs/quick-start.md): setup, tools, routes and Forms.
+- [Authentication](docs/authentication.md): identity, credential lifetimes and permissions.
+- [API reference](docs/api-reference.md): server and client APIs.
+- [Development](docs/development.md): transport limits and validation.

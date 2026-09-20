@@ -1,0 +1,19 @@
+site_name: Agent-native Anvil
+site_description: Expose Anvil tools and Forms to agent conversations
+
+theme:
+  name: readthedocs
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+plugins:
+  - search
+hooks:
+  - docs_hooks.py
+nav:
+  - Overview: index.md
+  - Quick start: quick-start.md
+  - Authentication: authentication.md
+  - API reference: api-reference.md
+  - Development: development.md

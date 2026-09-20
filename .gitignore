@@ -1,3 +1,5 @@
 bridge/node_modules/
 __pycache__/
 .anvil/
+
+/site/
