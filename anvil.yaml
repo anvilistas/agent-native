@@ -1,6 +1,6 @@
 allow_embedding: false
-name: Scratch 2
-package_name: Scratch_2
+name: agent-native
+package_name: agent_native
 runtime_options:
   client_version: '3'
   server_spec: {base: python310-minimal}
