@@ -1,0 +1,7 @@
+<div style="display:flex;align-items:center;gap:12px;border-top:1px solid #dde2e8;padding:12px 0;">
+  <div style="flex:1;min-width:0;">
+    <anvil-component type="Label" name="name" bind:text="self.item['label']"></anvil-component>
+    <anvil-component type="Label" name="scopes" bind:text="', '.join(self.item['scopes']) if self.item['enabled'] else 'Revoked'"></anvil-component>
+  </div>
+  <anvil-component type="Button" name="revoke" prop:text="Revoke" bind:enabled="self.item['enabled']"></anvil-component>
+</div>

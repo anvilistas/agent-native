@@ -28,13 +28,13 @@ def capabilities():
     return connect().capabilities()
 
 
-def claim(claim_function):
+def claim(view):
     bridge = connect()
-    result = anvil.server.call(claim_function, bridge.takeTicket())
+    result = anvil.server.call('agent_native_claim', view, bridge.takeTicket())
     if not result['ok']:
         try:
             ticket = bridge.renew()
         except anvil.js.ExternalError:
             return result
-        result = anvil.server.call(claim_function, ticket)
+        result = anvil.server.call('agent_native_claim', view, ticket)
     return result
